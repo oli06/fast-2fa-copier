@@ -15,8 +15,14 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "index",
+      "name": "copy",
       "title": "Copy 2FA Code",
+      "description": "Template for running a script without any view",
+      "mode": "no-view"
+    },
+    {
+      "name": "copyAndPaste",
+      "title": "Copy 2FA Code, Paste in Browser",
       "description": "Template for running a script without any view",
       "mode": "no-view"
     }
