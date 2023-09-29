@@ -78,10 +78,10 @@ const getCodeFromText = (text: string): string | null => {
 
   //cannot simply check for numeric/algebraic 4/6/8 digit codes as almost any message would match. (8 digit, 6 digit, 4 digit, word with at least one digit)
 
-  for(const regex of ["/[ ][0-9]{8,8}[ .]/gm", 
-                      "/[ ][0-9]{6,6}[ .]/gm,",
-                      "/[ ][0-9]{4,4}[ .]/gm",
-                      "/[ ]\\w*\\d+\\w*[ .]/gm"
+  for(const regex of [/[ ][0-9]{8,8}[ .]/gm, 
+                      /[ ][0-9]{6,6}[ .]/gm,
+                      /[ ][0-9]{4,4}[ .]/gm,
+                      /[ ]\\w*\\d+\\w*[ .]/g
                     ]) {
     const result = text.match(regex);
     if (result && result.length == 1) {
