@@ -1,4 +1,4 @@
-import { showHUD, Clipboard } from "@raycast/api";
+import { showHUD, Clipboard, showToast, Toast, open } from "@raycast/api";
 
 import { execSync } from "child_process";
 
@@ -41,9 +41,7 @@ const getCodeObject = (resultArray: string[]): CodeObject | null => {
 };
 
 const parseAttributedBody = (hexData: string): StreamTypedMessage => {
-
   const b = Buffer.from(hexData, "hex");
-
   return parseStreamtyped(b.toString("utf-8"));
 };
 
@@ -94,7 +92,6 @@ const getCodeFromText = (text: string): string | null => {
   return null;
 };
 
-
 const getCommand = () => {
   const limit = 5;
   const chatDb = process.env.HOME + "/Library/Messages/chat.db";
@@ -134,14 +131,32 @@ export default async function main() {
       const msg = codeObjects[0];
       if (msg.code) {
         await Clipboard.copy(msg.code);
-        await showHUD(`Code ${msg.code} was copied (${new Date(msg.date).toLocaleString()}).`);
+        showToast({
+          style: Toast.Style.Success,
+          title: "Success",
+          message: `Security code ${msg.code} copied to your clipboard.`,
+        });
+        //await showHUD(`Security code (${msg.code}) copied.`);
       } else {
-        await showHUD("No Code was found in your latest messages.");
+        //await showHUD("No Code was found in your latest messages.")
+        showToast({
+          style: Toast.Style.Failure,
+          title: "Error",
+          message: `No code found in your latest 5 messages.`,
+        });
       }
     } else {
-      await showHUD(
-        "Could not extract any code from your messages. If you're sure there is one please open a ticket in GitHub."
-      );
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Error",
+        message: `No code found in your latest 5 messages.`,
+        primaryAction: {
+          title: "Open Github Issues",
+          onAction: async () => {
+              await open("https://github.com/raycast/extensions/issues", "com.google.Chrome");
+            }
+        },
+      });
     }
   } catch (e) {
     let message;
