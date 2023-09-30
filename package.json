@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "security-code-copier",
   "title": "Security Code (2FA) Copier",
-  "description": "Extract your latest security code (2FA) from your Messages application and copy it automatically to the clipboard. Your Messages App must be connected with your Apple-ID and Sync between your iPhone and Mac must be enabled. Support for any code that is marked by the 2fa-provider as a authentication-code, 8-, 6-, 4-digit codes and alphanumeric codes with at least one digit.",
+  "description": "Extract your latest security code (2FA) from your Messages application (macOS) and automatically copy it to the clipboard. Your Messages App must be connected with your Apple-ID and Sync between your iPhone and Mac must be enabled. Support for any code that is marked by the 2fa-provider as a authentication-code, 8-, 6-, 4-digit codes and alphanumeric codes with at least one digit.",
   "icon": "command-icon.png",
   "author": "oliver_zernikow",
   "owner": "zentri.de",
