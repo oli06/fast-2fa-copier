@@ -1,6 +1,7 @@
-import { showHUD, Clipboard, showToast, Toast, open } from "@raycast/api";
+import { Clipboard, showToast, Toast, open } from "@raycast/api";
 
 import { execSync } from "child_process";
+const CHAT_DB = "/Library/Messages/chat.db"
 
 interface CodeObject {
   code: string | null;
@@ -63,7 +64,6 @@ const parseStreamtyped = (s: string): StreamTypedMessage => {
     if (s.includes("NSString")) {
       s = s.split("NSString")[1];
       if (s.includes("NSDictionary")) {
-        console.log("has dict");
         s = s.split("NSDictionary")[0];
         s = s.substring(6, s.length - 12);
       }
@@ -76,7 +76,8 @@ const parseStreamtyped = (s: string): StreamTypedMessage => {
 const getCodeFromText = (text: string): string | null => {
   if (!text) return null;
 
-  //cannot simply check for numeric/algebraic 4/6/8 digit codes as almost any message would match. (8 digit, 6 digit, 4 digit, word with at least one digit)
+  //cannot simply check for numeric/algebraic 4/6/8 digit codes as almost any word would match. 
+  //Instead match for 8 digit, 6 digit, 4 digit and at last words with at least one digit
 
   for(const regex of [/[ ][0-9]{8,8}[ .]/gm, 
                       /[ ][0-9]{6,6}[ .]/gm,
@@ -94,13 +95,21 @@ const getCodeFromText = (text: string): string | null => {
 
 const getCommand = () => {
   const limit = 5;
-  const chatDb = process.env.HOME + "/Library/Messages/chat.db";
-  //chatDb = "/Users/oliverzernikow/Documents/test_messages_db/raycast-extension2/chat.db";
+  const chatDbPath = process.env.HOME + CHAT_DB;
   const scriptPath = __dirname + "/assets/getChatDbLatestMessages.sh";
-  const scriptArgs = [chatDb, limit.toString()];
+  const scriptArgs = [chatDbPath, limit.toString()];
 
   return `sh ${scriptPath} ${scriptArgs.join(" ")}`;
 };
+
+const arePermissionsGranted = (): boolean => {
+  const scriptPath = __dirname + "/assets/checkPermissions.sh";
+  const chatDbPath = process.env.HOME + CHAT_DB;
+  const command = `sh ${scriptPath} ${chatDbPath}`;
+  
+  const stdout = execSync(command, { encoding: "utf8" });
+  return !stdout || stdout !== "blocked";
+}
 
 const sortByCodeRecency = (a: CodeObject, b: CodeObject) => {
   if (a.code && !b.code) return -1;
@@ -110,10 +119,42 @@ const sortByCodeRecency = (a: CodeObject, b: CodeObject) => {
 
 export default async function main() {
   try {
-    const command = getCommand();
+    if(!arePermissionsGranted()) {
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Missing Permissions",
+        message: `Please enable Full-Disk Access for the Raycast Application to make this extension work.`,
+        primaryAction: {
+          title: "Open System Preferences",
+          onAction: async () => {
+            await open("x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles", "com.apple.systempreferences");
+          }
+        }
+      });
+      return;
+    }
 
+    const command = getCommand();
     const stdout = execSync(command, { encoding: "utf8" });
+
+    if(!stdout) {
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Error",
+        message: `Command execution failed. Try again.`,
+      });
+      return;
+    }
+
     const allRows = stdout.split("\n");
+    if(!allRows) {
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Error",
+        message: `Could not extract any messages from your chats.`,
+      });
+      return;
+    }
     const codeObjects: CodeObject[] = [];
     allRows.forEach((element) => {
       if (element) {
@@ -126,7 +167,6 @@ export default async function main() {
 
     codeObjects.sort(sortByCodeRecency);
 
-    if (process) codeObjects.forEach((e) => console.log(e));
     if (codeObjects.length > 0) {
       const msg = codeObjects[0];
       if (msg.code) {
@@ -136,9 +176,7 @@ export default async function main() {
           title: "Success",
           message: `Security code ${msg.code} copied to your clipboard.`,
         });
-        //await showHUD(`Security code (${msg.code}) copied.`);
       } else {
-        //await showHUD("No Code was found in your latest messages.")
         showToast({
           style: Toast.Style.Failure,
           title: "Error",
@@ -165,6 +203,11 @@ export default async function main() {
     } else if (e instanceof Error) {
       message = e.message;
     }
-    await showHUD(`Some error occurred. ${message}`);
+
+    showToast({
+      style: Toast.Style.Failure,
+      title: "Error",
+      message: `Some Error occured. ${message}.`,
+    });
   }
 }
