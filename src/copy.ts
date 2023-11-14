@@ -79,10 +79,10 @@ const getCodeFromText = (text: string): string | null => {
   //cannot simply check for numeric/algebraic 4/6/8 digit codes as almost any word would match. 
   //Instead match for 8 digit, 6 digit, 4 digit and at last words with at least one digit
 
-  for(const regex of [/[ ][0-9]{8,8}[ .]/gm, 
-                      /[ ][0-9]{6,6}[ .]/gm,
-                      /[ ][0-9]{4,4}[ .]/gm,
-                      /[ ]\\w*\\d+\\w*[ .]/g
+  for(const regex of [/[ ][0-9]{8,8}/gm, 
+                      /[ ][0-9]{6,6}/gm,
+                      /[ ][0-9]{4,4}/gm,
+                      /[ ]\\w*\\d+\\w*/g
                     ]) {
     const result = text.match(regex);
     if (result && result.length == 1) {
@@ -166,6 +166,9 @@ export default async function main() {
     });
 
     codeObjects.sort(sortByCodeRecency);
+
+    console.log(codeObjects)
+
 
     if (codeObjects.length > 0) {
       const msg = codeObjects[0];
